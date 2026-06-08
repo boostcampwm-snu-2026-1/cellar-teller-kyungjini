@@ -1,5 +1,10 @@
 # cellar-teller Agent Instructions
 
+## Session Hand-off
+
+- Before starting new work, read `docs/hand-off.md` if it exists.
+- Use the hand-off document to confirm completed issues, current Supabase assumptions, branch caveats, and the next recommended issue.
+
 ## Branch Policy
 
 - All implementation work must target the `dev` branch through pull requests.
