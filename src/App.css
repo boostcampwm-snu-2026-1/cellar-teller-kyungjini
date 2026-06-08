@@ -1,0 +1,213 @@
+.inventory-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100svh;
+  padding: 40px;
+  text-align: left;
+}
+
+.inventory-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  max-width: 560px;
+  color: var(--muted);
+}
+
+.refresh-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--button-text);
+  background: var(--button-bg);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.refresh-button:hover {
+  background: var(--button-hover);
+}
+
+.refresh-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.state-message,
+.empty-state,
+.wine-form-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--panel);
+}
+
+.wine-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.wine-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.wine-form input,
+.wine-form select,
+.wine-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-h);
+  background: var(--input-bg);
+  font: inherit;
+  font-size: 16px;
+}
+
+.wine-form textarea {
+  resize: vertical;
+}
+
+.wine-form input:focus,
+.wine-form select:focus,
+.wine-form textarea:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.wide-field,
+.form-actions {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.form-actions .refresh-button {
+  width: auto;
+}
+
+.form-message {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.error-state {
+  display: grid;
+  gap: 8px;
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+  background: var(--danger-bg);
+}
+
+.wine-list {
+  display: grid;
+  gap: 16px;
+}
+
+.wine-card {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--panel);
+}
+
+.wine-card h2,
+.empty-state h2 {
+  margin: 0 0 6px;
+}
+
+.wine-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.wine-card dl div {
+  min-width: 0;
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+}
+
+.wine-card dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.wine-card dd {
+  margin: 2px 0 0;
+  color: var(--text-h);
+  font-weight: 650;
+}
+
+.wine-note {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.wine-meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .inventory-page {
+    padding: 24px 16px;
+  }
+
+  .inventory-header {
+    flex-direction: column;
+  }
+
+  .refresh-button {
+    width: 100%;
+  }
+
+  .wine-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .wine-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-actions .refresh-button {
+    width: 100%;
+  }
+}
