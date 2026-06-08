@@ -115,6 +115,11 @@
   padding-top: 14px;
 }
 
+.wine-meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 @media (max-width: 720px) {
   .inventory-page {
     padding: 24px 16px;

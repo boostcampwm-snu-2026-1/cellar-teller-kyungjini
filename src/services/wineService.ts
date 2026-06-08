@@ -3,30 +3,46 @@ import type { CreateWineInput, Wine } from '../types/wine'
 
 type WineRow = {
   id: string
-  owner_id: string
+  created_at: string
   name: string
   producer: string | null
   vintage: number | null
-  variety: string | null
-  price: number | string | null
+  type: string | null
+  grape_variety: string | null
+  region: string | null
   purchase_date: string | null
-  note: string | null
-  created_at: string
-  updated_at: string
+  purchase_price: number | string | null
+  is_cellar: boolean | null
+  cellar_zone: string | null
+  row_num: number | null
+  col_num: number | null
+  is_consumed: boolean | null
+  drinking_date: string | null
+  label_image_url: string | null
+  tasting_notes: string | null
+  rating: number | null
 }
 
 const wineColumns = [
   'id',
-  'owner_id',
+  'created_at',
   'name',
   'producer',
   'vintage',
-  'variety',
-  'price',
+  'type',
+  'grape_variety',
+  'region',
   'purchase_date',
-  'note',
-  'created_at',
-  'updated_at',
+  'purchase_price',
+  'is_cellar',
+  'cellar_zone',
+  'row_num',
+  'col_num',
+  'is_consumed',
+  'drinking_date',
+  'label_image_url',
+  'tasting_notes',
+  'rating',
 ].join(',')
 
 function toOptionalText(value: string | undefined): string | null {
@@ -37,16 +53,24 @@ function toOptionalText(value: string | undefined): string | null {
 function toWine(row: WineRow): Wine {
   return {
     id: row.id,
-    ownerId: row.owner_id,
     name: row.name,
     producer: row.producer,
     vintage: row.vintage,
-    variety: row.variety,
-    price: row.price === null ? null : Number(row.price),
+    type: row.type,
+    variety: row.grape_variety,
+    region: row.region,
+    price: row.purchase_price === null ? null : Number(row.purchase_price),
     purchaseDate: row.purchase_date,
-    note: row.note,
+    note: row.tasting_notes,
+    isCellar: row.is_cellar ?? false,
+    cellarZone: row.cellar_zone,
+    rowNum: row.row_num,
+    colNum: row.col_num,
+    isConsumed: row.is_consumed ?? false,
+    drinkingDate: row.drinking_date,
+    labelImageUrl: row.label_image_url,
+    rating: row.rating,
     createdAt: row.created_at,
-    updatedAt: row.updated_at,
   }
 }
 
@@ -77,30 +101,19 @@ export async function listWines(): Promise<Wine[]> {
 }
 
 export async function createWine(input: CreateWineInput): Promise<Wine> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError) {
-    throw normalizeSupabaseError(userError.message)
-  }
-
-  if (!user) {
-    throw new Error('Sign in before saving wine data. Owner-scoped RLS requires an authenticated user.')
-  }
-
   const { data, error } = await supabase
     .from('wines')
     .insert({
-      owner_id: user.id,
       name: input.name.trim(),
       producer: toOptionalText(input.producer),
       vintage: input.vintage ?? null,
-      variety: toOptionalText(input.variety),
-      price: input.price ?? null,
+      type: toOptionalText(input.type) ?? 'Red',
+      grape_variety: toOptionalText(input.variety),
+      region: toOptionalText(input.region),
+      purchase_price: input.price ?? null,
       purchase_date: input.purchaseDate ?? null,
-      note: toOptionalText(input.note),
+      tasting_notes: toOptionalText(input.note),
+      rating: input.rating ?? null,
     })
     .select(wineColumns)
     .single()

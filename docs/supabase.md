@@ -21,29 +21,40 @@ VITE_SUPABASE_ANON_KEY=<anon-public-key>
 
 - `src/lib/supabase.ts`에서 Supabase client를 초기화한다.
 - `VITE_SUPABASE_URL` 또는 `VITE_SUPABASE_ANON_KEY`가 없으면 앱 시작 시 개발자용 오류 메시지를 던진다.
-- `supabase/migrations/20260609000000_create_wines.sql`에 최소 `wines` table과 owner-scoped RLS 정책을 작성했다.
+- Supabase SQL Editor에 이미 생성된 `public.wines` inventory table을 기준 schema로 사용한다.
+- `supabase/migrations/20260609000000_existing_wines_inventory.sql`에 현재 SQL Editor schema를 기록했다.
 - `src/services/wineService.ts`에서 와인 생성과 목록 조회를 담당한다.
 - `src/App.tsx`에서 Supabase에서 읽은 와인 목록의 loading, empty, error 상태를 표시한다.
-- 아직 인증 UX는 구현하지 않았다.
+- 현재 Supabase 정책은 빠른 프로토타이핑을 위해 anon read/write를 허용한다.
 
 ## Wines migration 적용
 
-Supabase CLI가 프로젝트에 연결되기 전에는 Supabase Dashboard의 SQL Editor에서 다음 파일 내용을 실행한다.
+현재 remote Supabase에는 SQL Editor로 만든 `public.wines` table이 이미 있다. 같은 schema를 다시 만들거나 다른 환경에 적용해야 할 때는 다음 파일을 기준으로 한다.
 
 ```text
-supabase/migrations/20260609000000_create_wines.sql
+supabase/migrations/20260609000000_existing_wines_inventory.sql
 ```
 
-적용 후 `public.wines` table이 생성되고 RLS가 활성화된다.
+현재 앱은 다음 컬럼을 직접 사용한다.
+
+- `name`
+- `producer`
+- `vintage`
+- `type`
+- `grape_variety`
+- `region`
+- `purchase_date`
+- `purchase_price`
+- `tasting_notes`
+- `rating`
 
 ## RLS와 인증 제약
 
-`wines` table은 `owner_id = auth.uid()` 기준으로 select, insert, update, delete를 허용한다. 따라서 실제 wine row를 보거나 만들려면 Supabase Auth 세션이 필요하다.
+현재 SQL Editor에서 만든 정책은 다음과 같다.
 
-현재 인증 UI는 아직 없으므로 `npm run dev`에서는 다음 중 하나가 보인다.
+```sql
+CREATE POLICY "Allow public read and write access" ON public.wines
+    FOR ALL USING (true) WITH CHECK (true);
+```
 
-- migration 적용 전: table이 없다는 오류 메시지.
-- migration 적용 후, 인증 세션 없음: 빈 wine list 상태.
-- 인증 UI 또는 테스트 세션 준비 후: 현재 로그인 사용자의 wine list.
-
-개발 편의를 위해 RLS를 끄거나 anon 전체 공개 정책을 추가하면 #4의 owner-scoped RLS 요구와 충돌한다. 임시 공개 정책이 필요하면 별도 이슈로 명시한다.
+이 정책은 인증 없이 `npm run dev`에서 목록 조회와 프로토타입 저장을 빠르게 확인하기 위한 개발용 설정이다. 사용자별 데이터 격리가 필요해지는 시점에는 `owner_id` 또는 별도 profile/user mapping을 추가하고 owner-scoped RLS로 전환해야 한다.

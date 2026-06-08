@@ -104,6 +104,11 @@ function App() {
                   <dd>{wine.price === null ? 'N/A' : `$${wine.price.toFixed(2)}`}</dd>
                 </div>
               </dl>
+              <p className="wine-meta">
+                {wine.type ?? 'Unknown type'}
+                {wine.region ? ` · ${wine.region}` : ''}
+                {wine.isConsumed ? ' · Consumed' : ''}
+              </p>
               {wine.note && <p className="wine-note">{wine.note}</p>}
             </article>
           ))}
