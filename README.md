@@ -1,5 +1,18 @@
 # React + TypeScript + Vite
 
+## Local Environment
+
+Copy `.env.example` to `.env` and fill in the Supabase project values:
+
+```bash
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-public-key>
+```
+
+Use the Supabase `anon public` key for the React app. Do not put a `service_role` key in `.env`.
+
+See `docs/supabase.md` for the reusable Supabase setup notes.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
