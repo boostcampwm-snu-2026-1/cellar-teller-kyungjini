@@ -4,6 +4,7 @@
   --muted: #687382;
   --bg: #f7f7f4;
   --panel: #ffffff;
+  --input-bg: #ffffff;
   --border: #d9ddd5;
   --border-strong: #a7afa4;
   --code-bg: #f4f3ec;
@@ -45,6 +46,7 @@
     --muted: #9ca3af;
     --bg: #111315;
     --panel: #1b1f23;
+    --input-bg: #111315;
     --border: #30363d;
     --border-strong: #6b7280;
     --code-bg: #20242a;

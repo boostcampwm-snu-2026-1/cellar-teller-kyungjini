@@ -24,7 +24,7 @@ VITE_SUPABASE_ANON_KEY=<anon-public-key>
 - Supabase SQL Editor에 이미 생성된 `public.wines` inventory table을 기준 schema로 사용한다.
 - `supabase/migrations/20260609000000_existing_wines_inventory.sql`에 현재 SQL Editor schema를 기록했다.
 - `src/services/wineService.ts`에서 와인 생성과 목록 조회를 담당한다.
-- `src/App.tsx`에서 Supabase에서 읽은 와인 목록의 loading, empty, error 상태를 표시한다.
+- `src/App.tsx`에서 와인 입력 form과 Supabase에서 읽은 와인 목록의 loading, empty, error 상태를 표시한다.
 - 현재 Supabase 정책은 빠른 프로토타이핑을 위해 anon read/write를 허용한다.
 
 ## Wines migration 적용
@@ -57,4 +57,4 @@ CREATE POLICY "Allow public read and write access" ON public.wines
     FOR ALL USING (true) WITH CHECK (true);
 ```
 
-이 정책은 인증 없이 `npm run dev`에서 목록 조회와 프로토타입 저장을 빠르게 확인하기 위한 개발용 설정이다. 사용자별 데이터 격리가 필요해지는 시점에는 `owner_id` 또는 별도 profile/user mapping을 추가하고 owner-scoped RLS로 전환해야 한다.
+이 정책은 인증 없이 `npm run dev`에서 와인 추가와 목록 조회를 빠르게 확인하기 위한 개발용 설정이다. 사용자별 데이터 격리가 필요해지는 시점에는 `owner_id` 또는 별도 profile/user mapping을 추가하고 owner-scoped RLS로 전환해야 한다.

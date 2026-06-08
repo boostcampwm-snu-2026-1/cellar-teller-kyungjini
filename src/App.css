@@ -52,11 +52,72 @@
 }
 
 .state-message,
-.empty-state {
+.empty-state,
+.wine-form-panel {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 24px;
   background: var(--panel);
+}
+
+.wine-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.wine-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.wine-form input,
+.wine-form select,
+.wine-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-h);
+  background: var(--input-bg);
+  font: inherit;
+  font-size: 16px;
+}
+
+.wine-form textarea {
+  resize: vertical;
+}
+
+.wine-form input:focus,
+.wine-form select:focus,
+.wine-form textarea:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.wide-field,
+.form-actions {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.form-actions .refresh-button {
+  width: auto;
+}
+
+.form-message {
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .error-state {
@@ -135,5 +196,18 @@
 
   .wine-card dl {
     grid-template-columns: 1fr;
+  }
+
+  .wine-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-actions .refresh-button {
+    width: 100%;
   }
 }
