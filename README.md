@@ -13,6 +13,20 @@ Use the Supabase `anon public` key for the React app. Do not put a `service_role
 
 See `docs/supabase.md` for the reusable Supabase setup notes.
 
+## Testing
+
+Run the component test suite with Vitest and React Testing Library:
+
+```bash
+npm test
+```
+
+Use watch mode while developing tests:
+
+```bash
+npm run test:watch
+```
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
