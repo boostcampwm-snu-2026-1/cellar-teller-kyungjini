@@ -1,4 +1,7 @@
-# React + TypeScript + Vite
+# cellar-teller
+
+cellar-teller is a mobile-first React and Supabase web app for managing a personal wine inventory.
+The current MVP slice supports manual wine entry and a Supabase-backed inventory list.
 
 ## Local Environment
 
@@ -12,6 +15,16 @@ VITE_SUPABASE_ANON_KEY=<anon-public-key>
 Use the Supabase `anon public` key for the React app. Do not put a `service_role` key in `.env`.
 
 See `docs/supabase.md` for the reusable Supabase setup notes.
+
+## Current MVP Slice
+
+The manual wine create form validates values before it sends a Supabase request:
+
+- wine name is required
+- vintage must be a whole number from 1800 through 2200
+- price must be a valid non-negative number
+- purchase date must be a valid `YYYY-MM-DD` date
+- rating, when provided, must be a whole number from 1 through 5
 
 ## Testing
 
