@@ -25,6 +25,7 @@ VITE_SUPABASE_ANON_KEY=<anon-public-key>
 - `supabase/migrations/20260609000000_existing_wines_inventory.sql`에 현재 SQL Editor schema를 기록했다.
 - `src/services/wineService.ts`에서 와인 생성과 목록 조회를 담당한다.
 - `src/App.tsx`에서 와인 입력 form과 Supabase에서 읽은 와인 목록의 loading, empty, error 상태를 표시한다.
+- The wine create form validates required name, vintage range, price, purchase date, and rating before making a Supabase request.
 - 현재 Supabase 정책은 빠른 프로토타이핑을 위해 anon read/write를 허용한다.
 
 ## Wines migration 적용

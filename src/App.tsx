@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { createWine, listWines } from './services/wineService'
+import { buildCreateWineInput } from './utils/wineFormValidation'
 import type { FormEvent } from 'react'
 import type { Wine } from './types/wine'
 
@@ -10,6 +11,7 @@ function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [saveMessageType, setSaveMessageType] = useState<'status' | 'error'>('status')
 
   async function loadWines() {
     setStatus('loading')
@@ -58,10 +60,11 @@ function App() {
 
     const formData = new FormData(event.currentTarget)
     const form = event.currentTarget
-    const name = String(formData.get('name') ?? '').trim()
+    const validation = buildCreateWineInput(formData)
 
-    if (!name) {
-      setSaveMessage('Wine name is required.')
+    if (!validation.ok) {
+      setSaveMessage(validation.errors.join(' '))
+      setSaveMessageType('error')
       return
     }
 
@@ -69,24 +72,15 @@ function App() {
     setSaveMessage(null)
 
     try {
-      await createWine({
-        name,
-        producer: String(formData.get('producer') ?? ''),
-        vintage: toOptionalNumber(formData.get('vintage')),
-        type: String(formData.get('type') ?? ''),
-        variety: String(formData.get('variety') ?? ''),
-        region: String(formData.get('region') ?? ''),
-        price: toOptionalNumber(formData.get('price')),
-        purchaseDate: String(formData.get('purchaseDate') ?? '') || undefined,
-        note: String(formData.get('note') ?? ''),
-        rating: toOptionalNumber(formData.get('rating')),
-      })
+      await createWine(validation.input)
 
       form.reset()
       setSaveMessage('Wine saved.')
+      setSaveMessageType('status')
       await loadWines()
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : 'Failed to save wine.')
+      setSaveMessageType('error')
     } finally {
       setSaveStatus('idle')
     }
@@ -107,7 +101,7 @@ function App() {
 
       <section className="wine-form-panel" aria-labelledby="wine-form-title">
         <h2 id="wine-form-title">Add wine</h2>
-        <form className="wine-form" onSubmit={handleCreateWine}>
+        <form className="wine-form" noValidate onSubmit={handleCreateWine}>
           <label>
             <span>Name</span>
             <input name="name" required placeholder="Chateau Margaux" />
@@ -159,7 +153,14 @@ function App() {
             <button type="submit" className="refresh-button" disabled={saveStatus === 'saving'}>
               {saveStatus === 'saving' ? 'Saving...' : 'Save wine'}
             </button>
-            {saveMessage && <p className="form-message">{saveMessage}</p>}
+            {saveMessage && (
+              <p
+                className={`form-message ${saveMessageType === 'error' ? 'error-message' : ''}`}
+                role={saveMessageType === 'error' ? 'alert' : 'status'}
+              >
+                {saveMessage}
+              </p>
+            )}
           </div>
         </form>
       </section>
@@ -217,17 +218,6 @@ function App() {
       )}
     </main>
   )
-}
-
-function toOptionalNumber(value: FormDataEntryValue | null): number | undefined {
-  const text = String(value ?? '').trim()
-
-  if (!text) {
-    return undefined
-  }
-
-  const number = Number(text)
-  return Number.isFinite(number) ? number : undefined
 }
 
 export default App
