@@ -12,31 +12,33 @@ vi.mock('./services/wineService', () => ({
 const mockCreateWine = vi.mocked(createWine)
 const mockListWines = vi.mocked(listWines)
 
+const wine = {
+  id: 'wine-1',
+  name: 'Ridge Estate',
+  producer: 'Ridge Vineyards',
+  vintage: 2021,
+  type: 'Red',
+  variety: 'Cabernet Sauvignon',
+  region: 'Santa Cruz Mountains',
+  price: 45,
+  purchaseDate: '2026-06-09',
+  note: 'Black cherry and cedar.',
+  isCellar: true,
+  cellarZone: 'A',
+  rowNum: 2,
+  colNum: 3,
+  rating: 4,
+  isConsumed: false,
+  drinkingDate: null,
+  labelImageUrl: null,
+  createdAt: '2026-06-09T00:00:00.000Z',
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockCreateWine.mockResolvedValue({
-      id: 'wine-1',
-      name: 'Chateau Margaux',
-      producer: null,
-      vintage: null,
-      type: null,
-      variety: null,
-      region: null,
-      price: null,
-      purchaseDate: null,
-      note: null,
-      isCellar: false,
-      cellarZone: null,
-      rowNum: null,
-      colNum: null,
-      rating: null,
-      isConsumed: false,
-      drinkingDate: null,
-      labelImageUrl: null,
-      createdAt: '2026-06-09T00:00:00.000Z',
-    })
+    mockCreateWine.mockResolvedValue(wine)
     mockListWines.mockResolvedValue([])
   })
 
@@ -88,5 +90,35 @@ describe('App', () => {
     )
     expect(screen.getByRole('alert')).toHaveTextContent(/price must be greater than or equal to 0/i)
     expect(mockCreateWine).not.toHaveBeenCalled()
+  })
+
+  it('opens a selected wine detail view from the inventory list', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine])
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /view details for ridge estate/i }))
+
+    expect(screen.getByRole('heading', { name: /ridge estate/i })).toBeInTheDocument()
+    expect(screen.getByText(/ridge vineyards/i)).toBeInTheDocument()
+    expect(screen.getByText('Cellar: A, Row 2, Col 3')).toBeInTheDocument()
+    expect(screen.getByText('Black cherry and cedar.')).toBeInTheDocument()
+  })
+
+  it('shows a recoverable state when the selected wine is no longer loaded', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValueOnce([wine]).mockResolvedValueOnce([])
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /view details for ridge estate/i }))
+    await user.click(screen.getByRole('button', { name: /refresh/i }))
+
+    expect(await screen.findByRole('heading', { name: /wine not found/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /back to wine list/i }))
+
+    expect(await screen.findByRole('heading', { name: /no wines yet/i })).toBeInTheDocument()
   })
 })
