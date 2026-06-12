@@ -1,7 +1,8 @@
 # cellar-teller
 
 cellar-teller is a mobile-first React and Supabase web app for managing a personal wine inventory.
-The current MVP slice supports manual wine entry and a Supabase-backed inventory list.
+The current MVP slice supports manual wine entry, a Supabase-backed inventory list, and a
+selected wine detail view.
 
 ## Local Environment
 
@@ -25,6 +26,10 @@ The manual wine create form validates values before it sends a Supabase request:
 - price must be a valid non-negative number
 - purchase date must be a valid `YYYY-MM-DD` date
 - rating, when provided, must be a whole number from 1 through 5
+
+The inventory list can open a selected wine detail view with persisted field values from the
+loaded Supabase data. If the selected wine is no longer in the loaded list, the app shows a
+recoverable not-found state with a way back to the inventory list.
 
 ## Testing
 
