@@ -7,11 +7,13 @@ import type { Wine } from './types/wine'
 
 function App() {
   const [wines, setWines] = useState<Wine[]>([])
+  const [selectedWineId, setSelectedWineId] = useState<string | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [saveMessageType, setSaveMessageType] = useState<'status' | 'error'>('status')
+  const selectedWine = selectedWineId ? (wines.find((wine) => wine.id === selectedWineId) ?? null) : null
 
   async function loadWines() {
     setStatus('loading')
@@ -174,7 +176,7 @@ function App() {
         </section>
       )}
 
-      {status === 'ready' && wines.length === 0 && (
+      {status === 'ready' && !selectedWineId && wines.length === 0 && (
         <section className="empty-state" aria-live="polite">
           <h2>No wines yet</h2>
           <p>
@@ -184,7 +186,16 @@ function App() {
         </section>
       )}
 
-      {status === 'ready' && wines.length > 0 && (
+      {status === 'ready' && selectedWineId && (
+        <WineDetail
+          wine={selectedWine}
+          onBack={() => {
+            setSelectedWineId(null)
+          }}
+        />
+      )}
+
+      {status === 'ready' && !selectedWineId && wines.length > 0 && (
         <section className="wine-list" aria-label="Wine list">
           {wines.map((wine) => (
             <article className="wine-card" key={wine.id}>
@@ -212,12 +223,123 @@ function App() {
                 {wine.isConsumed ? ' · Consumed' : ''}
               </p>
               {wine.note && <p className="wine-note">{wine.note}</p>}
+              <button
+                type="button"
+                className="detail-button"
+                aria-label={`View details for ${wine.name}`}
+                onClick={() => {
+                  setSelectedWineId(wine.id)
+                }}
+              >
+                View details
+              </button>
             </article>
           ))}
         </section>
       )}
     </main>
   )
+}
+
+type WineDetailProps = {
+  wine: Wine | null
+  onBack: () => void
+}
+
+function WineDetail({ wine, onBack }: WineDetailProps) {
+  if (!wine) {
+    return (
+      <section className="wine-detail-panel missing-detail" aria-live="polite">
+        <div>
+          <p className="eyebrow">Wine detail</p>
+          <h2>Wine not found</h2>
+          <p className="subtitle">
+            This wine is no longer in the loaded inventory. Refresh the list or return to the
+            inventory view.
+          </p>
+        </div>
+        <button type="button" className="refresh-button" onClick={onBack}>
+          Back to wine list
+        </button>
+      </section>
+    )
+  }
+
+  return (
+    <section className="wine-detail-panel" aria-labelledby="wine-detail-title">
+      <div className="detail-header">
+        <div>
+          <p className="eyebrow">Wine detail</p>
+          <h2 id="wine-detail-title">{wine.name}</h2>
+          <p className="subtitle">{wine.producer ?? 'Unknown producer'}</p>
+        </div>
+        <button type="button" className="refresh-button" onClick={onBack}>
+          Back to wine list
+        </button>
+      </div>
+
+      <dl className="detail-grid">
+        <DetailField label="Vintage" value={formatNumber(wine.vintage)} />
+        <DetailField label="Type" value={wine.type ?? 'Unknown type'} />
+        <DetailField label="Variety" value={wine.variety ?? 'N/A'} />
+        <DetailField label="Region" value={wine.region ?? 'N/A'} />
+        <DetailField label="Price" value={formatPrice(wine.price)} />
+        <DetailField label="Purchase date" value={formatDate(wine.purchaseDate)} />
+        <DetailField label="Rating" value={wine.rating === null ? 'N/A' : `${wine.rating} / 5`} />
+        <DetailField label="Storage" value={formatStorage(wine)} />
+        <DetailField label="Status" value={wine.isConsumed ? 'Consumed' : 'In inventory'} />
+      </dl>
+
+      {wine.note && (
+        <section className="detail-note" aria-label="Tasting notes">
+          <h3>Notes</h3>
+          <p>{wine.note}</p>
+        </section>
+      )}
+    </section>
+  )
+}
+
+type DetailFieldProps = {
+  label: string
+  value: string
+}
+
+function DetailField({ label, value }: DetailFieldProps) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+function formatNumber(value: number | null): string {
+  return value === null ? 'N/A' : String(value)
+}
+
+function formatPrice(value: number | null): string {
+  return value === null ? 'N/A' : `$${value.toFixed(2)}`
+}
+
+function formatDate(value: string | null): string {
+  return value ?? 'N/A'
+}
+
+function formatStorage(wine: Wine): string {
+  if (!wine.isCellar) {
+    return 'Outside storage'
+  }
+
+  const position = [
+    wine.cellarZone,
+    wine.rowNum === null ? null : `Row ${wine.rowNum}`,
+    wine.colNum === null ? null : `Col ${wine.colNum}`,
+  ]
+    .filter(Boolean)
+    .join(', ')
+
+  return position ? `Cellar: ${position}` : 'Cellar'
 }
 
 export default App
