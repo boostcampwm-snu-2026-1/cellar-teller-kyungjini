@@ -120,6 +120,10 @@
   font-size: 14px;
 }
 
+.form-message.error-message {
+  color: var(--danger-text);
+}
+
 .error-state {
   display: grid;
   gap: 8px;
