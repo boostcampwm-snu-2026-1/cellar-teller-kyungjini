@@ -1,8 +1,8 @@
 # cellar-teller
 
 cellar-teller is a mobile-first React and Supabase web app for managing a personal wine inventory.
-The current MVP slice supports manual wine entry, a Supabase-backed inventory list, and a
-selected wine detail view.
+The current MVP slice supports manual wine entry, a Supabase-backed inventory list, a selected
+wine detail view, and a read-only cellar grid.
 
 ## Local Environment
 
@@ -30,6 +30,21 @@ The manual wine create form validates values before it sends a Supabase request:
 The inventory list can open a selected wine detail view with persisted field values from the
 loaded Supabase data. If the selected wine is no longer in the loaded list, the app shows a
 recoverable not-found state with a way back to the inventory list.
+
+The cellar tab renders a read-only 5 by 6 Zone A grid from each wine row's `is_cellar`,
+`cellar_zone`, `row_num`, and `col_num` fields. Bottles without a cellar position appear in the
+outside storage list.
+
+## Seed Data
+
+Seed the current cellar inventory sample into the configured Supabase project:
+
+```bash
+npm run seed:wines
+```
+
+The seed uses fixed UUIDs from `supabase/seed-wines.json` and upserts by `id`, so re-running the
+command updates the same 27 rows instead of inserting duplicates.
 
 ## Testing
 
