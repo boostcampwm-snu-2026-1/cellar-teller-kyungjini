@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "seed:wines": "node scripts/seed-wine-inventory.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

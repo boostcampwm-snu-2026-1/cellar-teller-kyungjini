@@ -34,6 +34,16 @@ const wine = {
   createdAt: '2026-06-09T00:00:00.000Z',
 }
 
+const outsideWine = {
+  ...wine,
+  id: 'wine-2',
+  name: 'Counter Bottle',
+  isCellar: false,
+  cellarZone: null,
+  rowNum: null,
+  colNum: null,
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -46,7 +56,7 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: /wine inventory/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /add wine/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /add wine/i })).toBeInTheDocument()
 
     expect(await screen.findByRole('heading', { name: /no wines yet/i })).toBeInTheDocument()
   })
@@ -55,6 +65,8 @@ describe('App', () => {
     const user = userEvent.setup()
 
     render(<App />)
+
+    await screen.findByRole('heading', { name: /add wine/i })
 
     await user.type(screen.getByLabelText(/name/i), 'Ridge Estate')
     await user.type(screen.getByLabelText(/producer/i), 'Ridge Vineyards')
@@ -79,6 +91,8 @@ describe('App', () => {
     const user = userEvent.setup()
 
     render(<App />)
+
+    await screen.findByRole('heading', { name: /add wine/i })
 
     await user.type(screen.getByLabelText(/name/i), 'Ridge Estate')
     await user.type(screen.getByLabelText(/vintage/i), '1700')
@@ -120,5 +134,43 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /back to wine list/i }))
 
     expect(await screen.findByRole('heading', { name: /no wines yet/i })).toBeInTheDocument()
+  })
+
+  it('renders a cellar grid from loaded wine positions', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine, outsideWine])
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^cellar$/i }))
+
+    expect(await screen.findByRole('heading', { name: /zone a/i })).toBeInTheDocument()
+    expect(screen.getByText('R2 C3')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: /view details for ridge estate in cellar row 2 column 3/i,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Counter Bottle')).toBeInTheDocument()
+  })
+
+  it('opens wine detail from the cellar grid and returns to the cellar', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine])
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^cellar$/i }))
+    await user.click(
+      await screen.findByRole('button', {
+        name: /view details for ridge estate in cellar row 2 column 3/i,
+      }),
+    )
+
+    expect(screen.getByRole('heading', { name: /ridge estate/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /back to cellar/i }))
+
+    expect(await screen.findByRole('heading', { name: /zone a/i })).toBeInTheDocument()
   })
 })
