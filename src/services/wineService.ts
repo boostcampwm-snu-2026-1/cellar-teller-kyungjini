@@ -1,4 +1,13 @@
-import { supabase } from '../lib/supabase'
+import { isStaticDemo } from '../config/appMode'
+import { getSupabase } from '../lib/supabase'
+import {
+  createDemoWine,
+  getDemoWines,
+  resetDemoWines,
+  swapDemoWineCellarPositions,
+  updateDemoWineCellarPosition,
+} from './staticDemoWineStore'
+import type { CellarPosition } from '../types/cellar'
 import type { CreateWineInput, Wine } from '../types/wine'
 
 type WineRow = {
@@ -16,6 +25,7 @@ type WineRow = {
   cellar_zone: string | null
   row_num: number | null
   col_num: number | null
+  depth_num?: number | null
   is_consumed: boolean | null
   drinking_date: string | null
   label_image_url: string | null
@@ -23,7 +33,7 @@ type WineRow = {
   rating: number | null
 }
 
-const wineColumns = [
+const WINE_COLUMN_LIST = [
   'id',
   'created_at',
   'name',
@@ -38,12 +48,31 @@ const wineColumns = [
   'cellar_zone',
   'row_num',
   'col_num',
+  'depth_num',
   'is_consumed',
   'drinking_date',
   'label_image_url',
   'tasting_notes',
   'rating',
-].join(',')
+] as const
+
+let supportsDepthNum: boolean | null = null
+
+function isMissingDepthColumn(message: string): boolean {
+  return message.includes('depth_num') && message.includes('does not exist')
+}
+
+function getSelectColumns(includeDepth: boolean): string {
+  const columns = includeDepth
+    ? WINE_COLUMN_LIST
+    : WINE_COLUMN_LIST.filter((column) => column !== 'depth_num')
+
+  return columns.join(',')
+}
+
+function shouldIncludeDepth(): boolean {
+  return supportsDepthNum !== false
+}
 
 function toOptionalText(value: string | undefined): string | null {
   const trimmed = value?.trim()
@@ -66,6 +95,7 @@ function toWine(row: WineRow): Wine {
     cellarZone: row.cellar_zone,
     rowNum: row.row_num,
     colNum: row.col_num,
+    depthNum: row.depth_num ?? 1,
     isConsumed: row.is_consumed ?? false,
     drinkingDate: row.drinking_date,
     labelImageUrl: row.label_image_url,
@@ -86,10 +116,25 @@ function normalizeSupabaseError(message: string): Error {
   return new Error(message)
 }
 
-export async function listWines(): Promise<Wine[]> {
-  const { data, error } = await supabase
+function toPositionPayload(position: CellarPosition) {
+  const payload: Record<string, unknown> = {
+    is_cellar: position.isCellar,
+    cellar_zone: position.cellarZone,
+    row_num: position.rowNum,
+    col_num: position.colNum,
+  }
+
+  if (shouldIncludeDepth()) {
+    payload.depth_num = position.depthNum ?? 1
+  }
+
+  return payload
+}
+
+async function selectWines(includeDepth: boolean): Promise<Wine[]> {
+  const { data, error } = await getSupabase()
     .from('wines')
-    .select(wineColumns)
+    .select(getSelectColumns(includeDepth))
     .order('created_at', { ascending: false })
     .returns<WineRow[]>()
 
@@ -100,8 +145,47 @@ export async function listWines(): Promise<Wine[]> {
   return (data ?? []).map(toWine)
 }
 
+export function resetWines(): void {
+  if (isStaticDemo) {
+    resetDemoWines()
+  }
+}
+
+export async function listWines(): Promise<Wine[]> {
+  if (isStaticDemo) {
+    return getDemoWines()
+  }
+
+  if (supportsDepthNum === false) {
+    return selectWines(false)
+  }
+
+  const { data, error } = await getSupabase()
+    .from('wines')
+    .select(getSelectColumns(true))
+    .order('created_at', { ascending: false })
+    .returns<WineRow[]>()
+
+  if (error) {
+    if (isMissingDepthColumn(error.message)) {
+      supportsDepthNum = false
+      return selectWines(false)
+    }
+
+    throw normalizeSupabaseError(error.message)
+  }
+
+  supportsDepthNum = true
+  return (data ?? []).map(toWine)
+}
+
 export async function createWine(input: CreateWineInput): Promise<Wine> {
-  const { data, error } = await supabase
+  if (isStaticDemo) {
+    return createDemoWine(input)
+  }
+
+  const includeDepth = shouldIncludeDepth()
+  const { data, error } = await getSupabase()
     .from('wines')
     .insert({
       name: input.name.trim(),
@@ -115,13 +199,83 @@ export async function createWine(input: CreateWineInput): Promise<Wine> {
       tasting_notes: toOptionalText(input.note),
       rating: input.rating ?? null,
     })
-    .select(wineColumns)
+    .select(getSelectColumns(includeDepth))
     .single()
     .returns<WineRow>()
 
   if (error) {
+    if (includeDepth && isMissingDepthColumn(error.message)) {
+      supportsDepthNum = false
+      return createWine(input)
+    }
+
     throw normalizeSupabaseError(error.message)
   }
 
+  if (includeDepth) {
+    supportsDepthNum = true
+  }
+
   return toWine(data)
+}
+
+export async function updateWineCellarPosition(
+  wineId: string,
+  position: CellarPosition,
+): Promise<Wine> {
+  if (isStaticDemo) {
+    return updateDemoWineCellarPosition(wineId, position)
+  }
+
+  const includeDepth = shouldIncludeDepth()
+  const { data, error } = await getSupabase()
+    .from('wines')
+    .update(toPositionPayload(position))
+    .eq('id', wineId)
+    .select(getSelectColumns(includeDepth))
+    .single()
+    .returns<WineRow>()
+
+  if (error) {
+    if (includeDepth && isMissingDepthColumn(error.message)) {
+      supportsDepthNum = false
+      return updateWineCellarPosition(wineId, position)
+    }
+
+    throw normalizeSupabaseError(error.message)
+  }
+
+  if (includeDepth) {
+    supportsDepthNum = true
+  }
+
+  return toWine(data)
+}
+
+export async function swapWineCellarPositions(wineA: Wine, wineB: Wine): Promise<[Wine, Wine]> {
+  if (isStaticDemo) {
+    return swapDemoWineCellarPositions(wineA, wineB)
+  }
+
+  const positionA: CellarPosition = {
+    isCellar: wineA.isCellar,
+    cellarZone: wineA.cellarZone,
+    rowNum: wineA.rowNum,
+    colNum: wineA.colNum,
+    depthNum: wineA.depthNum,
+  }
+  const positionB: CellarPosition = {
+    isCellar: wineB.isCellar,
+    cellarZone: wineB.cellarZone,
+    rowNum: wineB.rowNum,
+    colNum: wineB.colNum,
+    depthNum: wineB.depthNum,
+  }
+
+  const [updatedA, updatedB] = await Promise.all([
+    updateWineCellarPosition(wineA.id, positionB),
+    updateWineCellarPosition(wineB.id, positionA),
+  ])
+
+  return [updatedA, updatedB]
 }

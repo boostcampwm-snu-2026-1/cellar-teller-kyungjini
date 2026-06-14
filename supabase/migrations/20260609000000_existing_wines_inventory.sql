@@ -13,6 +13,7 @@ create table if not exists public.wines (
   cellar_zone text,
   row_num int,
   col_num int,
+  depth_num int default 1 check (depth_num >= 1 and depth_num <= 3),
   is_consumed boolean default false,
   drinking_date date,
   label_image_url text,

@@ -7,6 +7,9 @@ import { createWine, listWines } from './services/wineService'
 vi.mock('./services/wineService', () => ({
   createWine: vi.fn(),
   listWines: vi.fn(),
+  resetWines: vi.fn(),
+  updateWineCellarPosition: vi.fn(),
+  swapWineCellarPositions: vi.fn(),
 }))
 
 const mockCreateWine = vi.mocked(createWine)
@@ -27,11 +30,27 @@ const wine = {
   cellarZone: 'A',
   rowNum: 2,
   colNum: 3,
+  depthNum: 1,
   rating: 4,
   isConsumed: false,
   drinkingDate: null,
   labelImageUrl: null,
   createdAt: '2026-06-09T00:00:00.000Z',
+}
+
+const outsideWine = {
+  ...wine,
+  id: 'wine-2',
+  name: 'Counter Bottle',
+  isCellar: false,
+  cellarZone: null,
+  rowNum: null,
+  colNum: null,
+  depthNum: null,
+}
+
+async function openAddWineForm(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /add wine/i }))
 }
 
 describe('App', () => {
@@ -46,7 +65,7 @@ describe('App', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: /wine inventory/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /add wine/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /add wine/i })).toBeInTheDocument()
 
     expect(await screen.findByRole('heading', { name: /no wines yet/i })).toBeInTheDocument()
   })
@@ -55,6 +74,8 @@ describe('App', () => {
     const user = userEvent.setup()
 
     render(<App />)
+
+    await openAddWineForm(user)
 
     await user.type(screen.getByLabelText(/name/i), 'Ridge Estate')
     await user.type(screen.getByLabelText(/producer/i), 'Ridge Vineyards')
@@ -80,6 +101,8 @@ describe('App', () => {
 
     render(<App />)
 
+    await openAddWineForm(user)
+
     await user.type(screen.getByLabelText(/name/i), 'Ridge Estate')
     await user.type(screen.getByLabelText(/vintage/i), '1700')
     await user.type(screen.getByLabelText(/price/i), '-1')
@@ -98,11 +121,12 @@ describe('App', () => {
     mockListWines.mockResolvedValue([wine])
     render(<App />)
 
-    await user.click(await screen.findByRole('button', { name: /view details for ridge estate/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /view details for ridge vineyards, ridge estate/i }),
+    )
 
-    expect(screen.getByRole('heading', { name: /ridge estate/i })).toBeInTheDocument()
-    expect(screen.getByText(/ridge vineyards/i)).toBeInTheDocument()
-    expect(screen.getByText('Cellar: A, Row 2, Col 3')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /ridge vineyards, ridge estate/i })).toBeInTheDocument()
+    expect(screen.getByText('Cellar: A, Shelf 2, Slot 3')).toBeInTheDocument()
     expect(screen.getByText('Black cherry and cedar.')).toBeInTheDocument()
   })
 
@@ -112,7 +136,9 @@ describe('App', () => {
     mockListWines.mockResolvedValueOnce([wine]).mockResolvedValueOnce([])
     render(<App />)
 
-    await user.click(await screen.findByRole('button', { name: /view details for ridge estate/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /view details for ridge vineyards, ridge estate/i }),
+    )
     await user.click(screen.getByRole('button', { name: /refresh/i }))
 
     expect(await screen.findByRole('heading', { name: /wine not found/i })).toBeInTheDocument()
@@ -120,5 +146,59 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /back to wine list/i }))
 
     expect(await screen.findByRole('heading', { name: /no wines yet/i })).toBeInTheDocument()
+  })
+
+  it('renders a cellar grid from loaded wine positions', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine, outsideWine])
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^cellar$/i }))
+
+    expect(await screen.findByRole('heading', { name: /home cellar/i })).toBeInTheDocument()
+    expect(screen.getByText('T4')).toBeInTheDocument()
+  })
+
+  it('opens wine detail from the cellar shelf and returns to the cellar', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine])
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^cellar$/i }))
+    await user.click(await screen.findByRole('button', { name: /open shelf t4/i }))
+    await user.click(await screen.findByLabelText(/ridge vineyards, ridge estate/i))
+
+    expect(screen.getByRole('heading', { name: /ridge estate/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /back to shelf t4/i }))
+
+    expect(await screen.findByRole('heading', { name: /shelf t4/i })).toBeInTheDocument()
+  })
+
+  it('returns from wine detail to the shelf overview', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine])
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^cellar$/i }))
+    await user.click(await screen.findByRole('button', { name: /open shelf t4/i }))
+    await user.click(await screen.findByRole('button', { name: /back to shelves/i }))
+
+    expect(await screen.findByRole('button', { name: /open shelf t4/i })).toBeInTheDocument()
+  })
+
+  it('renders the recommendation tab', async () => {
+    const user = userEvent.setup()
+
+    mockListWines.mockResolvedValue([wine])
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /^recommend$/i }))
+
+    expect(await screen.findByRole('heading', { name: /오늘 어떤 와인을 마실까요/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /추천 받기/i })).toBeDisabled()
   })
 })
