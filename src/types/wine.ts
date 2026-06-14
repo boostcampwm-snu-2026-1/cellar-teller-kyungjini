@@ -13,6 +13,7 @@ export type Wine = {
   cellarZone: string | null
   rowNum: number | null
   colNum: number | null
+  depthNum: number | null
   isConsumed: boolean
   drinkingDate: string | null
   labelImageUrl: string | null

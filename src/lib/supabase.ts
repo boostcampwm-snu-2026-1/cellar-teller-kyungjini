@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { isStaticDemo } from '../config/appMode'
 
 type SupabaseEnvKey = 'VITE_SUPABASE_URL' | 'VITE_SUPABASE_ANON_KEY'
 
@@ -14,7 +15,16 @@ function requiredEnv(name: SupabaseEnvKey): string {
   return value
 }
 
-const supabaseUrl = requiredEnv('VITE_SUPABASE_URL')
-const supabaseAnonKey = requiredEnv('VITE_SUPABASE_ANON_KEY')
+let client: SupabaseClient | null = null
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export function getSupabase(): SupabaseClient {
+  if (isStaticDemo) {
+    throw new Error('Supabase is not available in static demo mode.')
+  }
+
+  if (!client) {
+    client = createClient(requiredEnv('VITE_SUPABASE_URL'), requiredEnv('VITE_SUPABASE_ANON_KEY'))
+  }
+
+  return client
+}
